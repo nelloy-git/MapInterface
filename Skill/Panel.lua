@@ -17,18 +17,18 @@ local isTypeErr = Wc3Utils.isTypeErr or error('')
 local Log = Wc3Utils.Log or error('')
 
 ---@type InterfaceSkillButtonClass
-local SkillButton = require('Interface.Skill.Button') or error('')
+local SkillButton = require('Skill.Button') or error('')
 ---@type InterfaceSkillHotkeyClass
-local SkillHotkey = require('Interface.Skill.Hotkey') or error('')
+local SkillHotkey = require('Skill.Hotkey') or error('')
 
 --=======
 -- Class
 --=======
 
-local InterfaceSkillPanel = Class.new('InterfaceSkillPanel', NormalImage)
----@class InterfaceSkillPanel : FrameNormalImage
+local InterfaceSkillPanel = Class.new('InterfaceSkillPanel', Backdrop)
+---@class InterfaceSkillPanel : FrameExtBackdrop
 local public = InterfaceSkillPanel.public
----@class InterfaceSkillPanelClass : FrameNormalImageClass
+---@class InterfaceSkillPanelClass : FrameExtBackdropClass
 local static = InterfaceSkillPanel.static
 ---@type InterfaceSkillPanelClass
 local override = InterfaceSkillPanel.override
@@ -38,23 +38,16 @@ local private = {}
 -- Static
 --=========
 
-local static_instance = nil
-
 ---@param max_abils number
 ---@return InterfaceSkillPanel
 function override.new(max_abils)
     isTypeErr(max_abils, 'number', 'max_abils')
-    if static_instance then
-        Log:wrn(tostring(InterfaceSkillPanel)..': can not get new instance. It is static class.')
-        return static_instance
-    end
 
     local instance = Class.allocate(InterfaceSkillPanel)
-    instance = NormalImage.new(nil, instance)
+    instance = Backdrop.new(nil, instance)
 
     private.newData(instance, max_abils)
 
-    static_instance = instance
     return instance
 end
 
@@ -65,13 +58,18 @@ end
 ---@param width number
 ---@param height number
 function public:setSize(width, height)
-    NormalImagePublic.setSize(self, width, height)
+    isTypeErr(self, InterfaceSkillPanel, 'self')
+    isTypeErr(width, 'number', 'width')
+    isTypeErr(height, 'number', 'height')
+
+    BackdropPublic.setSize(self, width, height)
     private.updateSize(self)
 end
 
 ---@param container AbilityExtContainer
 function public:setAbilContainer(container)
-    if container then isTypeErr(container, AbilContainer, 'container') end
+    isTypeErr(self, InterfaceSkillPanel, 'self')
+    isTypeErr(container, {'nil', AbilityExtContainer}, 'container')
     local priv = private.data[self]
 
     local abil_list = container and container:getAll() or {}
@@ -81,6 +79,7 @@ function public:setAbilContainer(container)
         local abil = abil_list[i]
         priv.buttons[i]:setAbility(abil)
 
+        -- TODO
         if i <= 9 then
             priv.hotkeys[i]:setHotkey(tostring(i), abil, true)
         end
@@ -110,7 +109,7 @@ function private.newData(self, max_abils)
     private.data[self] = priv
 
     for i = 1, max_abils do
-        local back = NormalImage.new(private.fdf)
+        local back = Backdrop.new(private.fdf)
         back:setParent(self)
         priv.backgrouds[i] = back
 
@@ -168,7 +167,7 @@ function private.updateSize(self)
     end
 end
 
-private.fdf = FdfNormalImage.new('InterfaceSkillPanel')
+private.fdf = FdfBackdrop.new('InterfaceSkillPanel')
 private.fdf:setWidth(0.01)
 private.fdf:setHeight(0.01)
 private.fdf:setBackgroundTileMode(true)

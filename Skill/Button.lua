@@ -15,11 +15,11 @@ local Wc3Utils = LibManager.getDepency('Wc3Utils') or error('')
 local isTypeErr = Wc3Utils.isTypeErr or error('')
 
 ---@type InterfaceSkillButtonFdf
-local Fdf = require('Interface.Skill.ButtonFdf') or error('')
+local Fdf = require('Skill.ButtonFdf') or error('')
 ---@type InterfaceSkillChargesClass
-local SkillCharges = require('Interface.Skill.Charges') or error('')
+local SkillCharges = require('Skill.Charges') or error('')
 ---@type InterfaceSkillCooldownClass
-local SkillCooldown = require('Interface.Skill.Cooldown') or error('')
+local SkillCooldown = require('Skill.Cooldown') or error('')
 
 --=======
 -- Class

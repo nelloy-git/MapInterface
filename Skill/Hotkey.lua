@@ -73,7 +73,7 @@ end
 function public:setHotkey(key, abil)
     isTypeErr(self, InterfaceSkillHotkey, 'self')
     isTypeErr(key, 'string', 'key')
-    isTypeErr(abil, AbilityExt, 'abil')
+    isTypeErr(abil, {'nil', AbilityExt}, 'abil')
     local priv = private.data[self]
 
     if private.key2hotkey[key] then
