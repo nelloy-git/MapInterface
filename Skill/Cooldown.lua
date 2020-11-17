@@ -2,24 +2,27 @@
 -- Include
 --=========
 
-local Class = require(LibList.ClassLib) or error('')
----@type FrameLib
-local FrameLib = require(LibList.FrameLib) or error('')
-local SimpleImage = FrameLib.Simple.Image or error('')
-local SimpleImagePublic = Class.getPublic(SimpleImage) or error('')
-local SimpleText = FrameLib.Simple.Text or error('')
----@type UtilsLib
-local UtilsLib = require(LibList.UtilsLib) or error('')
-local isTypeErr = UtilsLib.isTypeErr or error('')
+local Class = LibManager.getDepency('LuaClass')
+---@type Wc3AbilityExt
+local Wc3AbilityExt = LibManager.getDepency('Wc3AbilityExt')
+local AbilityExtCharges = Wc3AbilityExt.Charges or error('')
+---@type Wc3FrameExt
+local Wc3FrameExt = LibManager.getDepency('Wc3FrameExt')
+local SimpleFrame = Wc3FrameExt.SimpleFrame or error('')
+local SimpleFramePublic = Class.getPublic(SimpleFrame) or error('')
+local SimpleText = Wc3FrameExt.SimpleText or error('')
+---@type Wc3Utils
+local Wc3Utils = LibManager.getDepency('Wc3Utils') or error('')
+local isTypeErr = Wc3Utils.isTypeErr or error('')
 
 --=======
 -- Class
 --=======
 
-local InterfaceSkillCooldown = Class.new('InterfaceSkillCooldown', SimpleImage)
----@class InterfaceSkillCooldown : Frame
+local InterfaceSkillCooldown = Class.new('InterfaceSkillCooldown', SimpleFrame)
+---@class InterfaceSkillCooldown : FrameExtSimpleFrame
 local public = InterfaceSkillCooldown.public
----@class InterfaceSkillCooldownClass : FrameClass
+---@class InterfaceSkillCooldownClass : FrameExtSimpleFrameClass
 local static = InterfaceSkillCooldown.static
 ---@type InterfaceSkillCooldownClass
 local override = InterfaceSkillCooldown.override
@@ -32,10 +35,10 @@ local private = {}
 ---@param child InterfaceSkillCooldown | nil
 ---@return InterfaceSkillCooldown
 function override.new(child)
-    if child then isTypeErr(child, InterfaceSkillCooldown, 'child') end
+    isTypeErr(child, {'nil', InterfaceSkillCooldown}, 'child')
 
     local instance = child or Class.allocate(InterfaceSkillCooldown)
-    instance = SimpleImage.new(instance)
+    instance = SimpleFrame.new(instance)
 
     private.newData(instance)
 
@@ -49,6 +52,9 @@ end
 ---@param width number
 ---@param height number
 function public:setSize(width, height)
+    isTypeErr(self, InterfaceSkillCooldown, 'self')
+    isTypeErr(width, 'number', 'width')
+    isTypeErr(height, 'number', 'height')
     local priv = private.data[self]
 
     priv.width = width
@@ -60,16 +66,20 @@ end
 
 ---@return number
 function public:getWidth()
+    isTypeErr(self, InterfaceSkillCooldown, 'self')
     return private.data[self].width
 end
 
 ---@return number
 function public:getHeight()
+    isTypeErr(self, InterfaceSkillCooldown, 'self')
     return private.data[self].height
 end
 
 ---@param charges AbilityExtCharges
 function public:setCharges(charges)
+    isTypeErr(self, InterfaceSkillCooldown, 'self')
+    isTypeErr(charges, {'nil', AbilityExtCharges}, 'charges')
     local priv = private.data[self]
 
     local prev = priv.charges
@@ -103,8 +113,8 @@ private.charges2frame = setmetatable({}, {__mode = 'kv'})
 ---@param self InterfaceSkillCooldown
 function private.newData(self)
     local priv = {
-        width = SimpleImagePublic.getWidth(self),
-        height = SimpleImagePublic.getHeight(self),
+        width = SimpleFramePublic.getWidth(self),
+        height = SimpleFramePublic.getHeight(self),
 
         text = SimpleText.new(),
 
@@ -121,8 +131,8 @@ function private.newData(self)
     self:setTexture('Replaceabletextures\\Teamcolor\\Teamcolor27.blp')
 end
 
----@type AbilityExtChargesCallback
-private.changedCallback = function(charges)
+---@param charges AbilityExtCharges
+function private.changedCallback(charges)
     ---@type InterfaceSkillCooldown
     local self = private.charges2frame[charges]
     local priv = private.data[self]
@@ -136,7 +146,8 @@ private.changedCallback = function(charges)
     end
 end
 
-private.cooldownLoop = function(charges)
+---@param charges AbilityExtCharges
+function private.cooldownLoop(charges)
     ---@type InterfaceSkillCooldown
     local self = private.charges2frame[charges]
     local priv = private.data[self]
@@ -145,7 +156,7 @@ private.cooldownLoop = function(charges)
     local full = charges:getCooldown()
     local perc = cur / full
 
-    SimpleImagePublic.setSize(self, perc * priv.width, priv.height)
+    SimpleFramePublic.setSize(self, perc * priv.width, priv.height)
 
     cur = math.floor(cur/0.1)
     local s_cur = tostring(cur)

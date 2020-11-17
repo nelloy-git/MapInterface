@@ -2,33 +2,32 @@
 -- Include
 --=========
 
-local Class = require(LibList.ClassLib) or error('')
----@type FrameLib
-local FrameLib = require(LibList.FrameLib) or error('')
-local FdfNormalImage = FrameLib.Fdf.Normal.Backdrop or error('')
-local NormalImage = FrameLib.Normal.Image or error('')
-local NormalImagePublic = Class.getPublic(NormalImage) or error('')
-local SimpleText = FrameLib.Simple.Text or error('')
----@type InputLib
-local InputLib = require(LibList.InputLib) or error('')
-local addKeyboardAction = InputLib.addKeyboardAction or error('')
-local removeKeyboardAction = InputLib.removeKeyboardAction or error('')
----@type TypesLib
-local TypesLib = require(LibList.TypesLib) or error('')
-local FrameEvemt = TypesLib.FrameEventTypeEnum
----@type UtilsLib
-local UtilsLib = require(LibList.UtilsLib) or error('')
-local isTypeErr = UtilsLib.isTypeErr or error('')
-local Log = UtilsLib.Log or error('')
+local Class = LibManager.getDepency('LuaClass')
+---@type Wc3AbilityExt
+local Wc3AbilityExt = LibManager.getDepency('Wc3AbilityExt')
+local AbilityExt = Wc3AbilityExt.AbilityExt or error('')
+---@type Wc3FrameExt
+local Wc3FrameExt = LibManager.getDepency('Wc3FrameExt')
+local FdfBackdrop = Wc3FrameExt.FdfBackdrop or error('')
+local Backdrop = Wc3FrameExt.Backdrop or error('')
+local BackdropPublic = Class.getPublic(Backdrop) or error('')
+local SimpleText = Wc3FrameExt.SimpleText or error('')
+---@type Wc3Input
+local Wc3Input = LibManager.getDepency('Wc3Input')
+local Keyboard = Wc3Input.Keyboard or error('')
+---@type Wc3Utils
+local Wc3Utils = LibManager.getDepency('Wc3Utils')
+local isTypeErr = Wc3Utils.isTypeErr or error('')
+local Log = Wc3Utils.Log or error('')
 
 --=======
 -- Class
 --=======
 
-local InterfaceSkillHotkey = Class.new('InterfaceSkillHotkey', NormalImage)
----@class InterfaceSkillHotkey : FrameNormalImage
+local InterfaceSkillHotkey = Class.new('InterfaceSkillHotkey', Backdrop)
+---@class InterfaceSkillHotkey : FrameExtBackdrop
 local public = InterfaceSkillHotkey.public
----@class InterfaceSkillHotkeyClass : FrameNormalImageClass
+---@class InterfaceSkillHotkeyClass : FrameExtBackdropClass
 local static = InterfaceSkillHotkey.static
 ---@type InterfaceSkillHotkeyClass
 local override = InterfaceSkillHotkey.override
@@ -40,10 +39,10 @@ local private = {}
 
 ---@return InterfaceSkillHotkey
 function override.new(child)
-    if child then isTypeErr(child, InterfaceSkillHotkey, 'child') end
+    isTypeErr(child, {'nil', InterfaceSkillHotkey}, 'child')
 
     local instance = child or Class.allocate(InterfaceSkillHotkey)
-    instance = NormalImage.new(private.fdf, instance)
+    instance = Backdrop.new(private.fdf, instance)
 
     private.newData(instance)
 
@@ -57,8 +56,12 @@ end
 ---@param width number
 ---@param height number
 function public:setSize(width, height)
-    NormalImagePublic.setSize(self, width, height)
+    isTypeErr(self, InterfaceSkillHotkey, 'self')
+    isTypeErr(width, 'number', 'width')
+    isTypeErr(height, 'number', 'height')
     local priv = private.data[self]
+
+    BackdropPublic.setSize(self, width, height)
 
     priv.text:setSize(width, height)
     priv.text:setFont('fonts\\nim_____.ttf', 0.8 * height)
@@ -66,20 +69,43 @@ end
 
 ---@param key string
 ---@param abil AbilityExt
----@param is_fast boolean
-function public:setHotkey(key, abil, is_fast)
+---@return boolean
+function public:setHotkey(key, abil)
+    isTypeErr(self, InterfaceSkillHotkey, 'self')
+    isTypeErr(key, 'string', 'key')
+    isTypeErr(abil, AbilityExt, 'abil')
     local priv = private.data[self]
+
+    if private.key2hotkey[key] then
+        return false
+    end
+
+    -- Disable previuos
+    if priv.key then
+        private.key2hotkey[priv.key] = nil
+        Keyboard.removeAction(private.key2action[priv.key])
+    end
+
+    if key then
+        private.key2hotkey[key] = self
+        private.key2action[priv.key] = Keyboard.addAction(key, private.keyPressedCallback)
+    end
 
     priv.key = key
     priv.text:setText(key)
     priv.abil = abil
-    priv.is_fast = is_fast
-    if priv.action then
-        removeKeyboardAction(priv.action)
-    end
-    priv.action = addKeyboardAction(key, function(key, is_down, pl)
-        private.keyPressedCallback(self, key, is_down, pl)
-    end)
+
+    return true
+end
+
+--- If hotkey is smart it is conrolled by key down and key up events instead of click.
+---@param flag boolean
+function public:setSmart(flag)
+    isTypeErr(self, InterfaceSkillHotkey, 'self')
+    isTypeErr(flag, 'boolean', 'flag')
+    local priv = private.data[self]
+
+    priv.smart = flag
 end
 
 --=========
@@ -87,42 +113,43 @@ end
 --=========
 
 private.data = setmetatable({}, {__mode = 'k'})
+private.key2hotkey = setmetatable({}, {__mode = 'v'})
+private.key2action = setmetatable({}, {__mode = 'v'})
 
 ---@param self InterfaceSkillHotkey
 function private.newData(self)
     local priv = {
         key = nil,
         abil = nil,
-        is_fast = false,
-        action = nil,
+        smart = false,
 
         text = SimpleText.new(),
     }
     private.data[self] = priv
 
     priv.text:setParent(self)
-
     self:setSize(self:getWidth(), self:getHeight())
 end
 
----@param self InterfaceSkillHotkey
 ---@param key string
 ---@param is_down boolean
-function private.keyPressedCallback(self, key, is_down, pl)
-    local priv = private.data[self]
-    if pl ~= GetLocalPlayer() or not self:isVisible() then
-        return
-    end
+---@param meta number
+---@param pl player
+function private.keyPressedCallback(key, is_down, meta, pl)
+    if pl ~= GetLocalPlayer() then return end
 
+    ---@type InterfaceSkillHotkey | nil
+    local self = private.key2hotkey[key]
+    if not self then return end
+
+    local priv = private.data[self]
+    if not priv.abil then return end
     if priv.key ~= key then
         Log:err(tostring(self)..': called with wrong key.')
     end
 
-    if not priv.abil then
-        return
-    end
-
-    if priv.is_fast then
+    -- TODO metakey
+    if priv.smart then
         if priv.abil:isTargeting() and not is_down then
             priv.abil:targetingFinish()
         elseif not priv.abil:isTargeting() and is_down then
@@ -139,7 +166,7 @@ function private.keyPressedCallback(self, key, is_down, pl)
     end
 end
 
-private.fdf = FdfNormalImage.new('InterfaceSkillHotkey')
+private.fdf = FdfBackdrop.new('InterfaceSkillHotkey')
 private.fdf:setWidth(0.01)
 private.fdf:setHeight(0.01)
 private.fdf:setBackground('Replaceabletextures\\Teamcolor\\Teamcolor27.blp')

@@ -2,12 +2,9 @@
 -- Include
 --=========
 
----@type FrameLib
-local FrameLib = require(LibList.FrameLib) or error('')
-local FdfBackdrop = FrameLib.Fdf.Normal.Backdrop or error('')
-local FdfGlueTextButton = FrameLib.Fdf.Normal.GlueTextButton or error('')
-local FdfHighlight = FrameLib.Fdf.Normal.Highlight or error('')
-local FdfText = FrameLib.Fdf.Normal.Text or error('')
+---@type Wc3FrameExt
+local Wc3FrameExt = LibManager.getDepency('Wc3FrameExt')
+local FdfGlueTextButton = Wc3FrameExt.FdfGlueTextButton or error('')
 
 --==========
 -- Settings

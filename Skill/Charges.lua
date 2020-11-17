@@ -2,28 +2,28 @@
 -- Include
 --=========
 
-local Class = require(LibList.ClassLib) or error('')
----@type FrameLib
-local FrameLib = require(LibList.FrameLib) or error('')
-local FdfNormalImage = FrameLib.Fdf.Normal.Backdrop or error('')
-local NormalImage = FrameLib.Normal.Image or error('')
-local NormalImagePublic = Class.getPublic(NormalImage) or error('')
-local SimpleText = FrameLib.Simple.Text or error('')
----@type TypesLib
-local TypesLib = require(LibList.TypesLib) or error('')
-local FrameEvemt = TypesLib.FrameEventTypeEnum
----@type UtilsLib
-local UtilsLib = require(LibList.UtilsLib) or error('')
-local isTypeErr = UtilsLib.isTypeErr or error('')
+local Class = LibManager.getDepency('LuaClass')
+---@type Wc3AbilityExt
+local Wc3AbilityExt = LibManager.getDepency('Wc3AbilityExt')
+local AbilityExtCharges = Wc3AbilityExt.Charges or error('')
+---@type Wc3FrameExt
+local Wc3FrameExt = LibManager.getDepency('Wc3FrameExt')
+local FdfBackdrop = Wc3FrameExt.FdfBackdrop or error('')
+local Backdrop = Wc3FrameExt.Backdrop or error('')
+local BackdropPublic = Class.getPublic(Backdrop) or error('')
+local SimpleText = Wc3FrameExt.SimpleText or error('')
+---@type Wc3Utils
+local Wc3Utils = LibManager.getDepency('Wc3Utils') or error('')
+local isTypeErr = Wc3Utils.isTypeErr or error('')
 
 --=======
 -- Class
 --=======
 
-local InterfaceSkillCharges = Class.new('InterfaceSkillCharges', NormalImage)
----@class InterfaceSkillCharges : FrameNormalImage
+local InterfaceSkillCharges = Class.new('InterfaceSkillCharges', Backdrop)
+---@class InterfaceSkillCharges : FrameExtBackdrop
 local public = InterfaceSkillCharges.public
----@class InterfaceSkillChargesClass : FrameNormalImageClass
+---@class InterfaceSkillChargesClass : FrameExtBackdropClass
 local static = InterfaceSkillCharges.static
 ---@type InterfaceSkillChargesClass
 local override = InterfaceSkillCharges.override
@@ -36,10 +36,10 @@ local private = {}
 ---@param child InterfaceSkillCharges | nil
 ---@return InterfaceSkillCharges
 function override.new(child)
-    if child then isTypeErr(child, InterfaceSkillCharges, 'child') end
+    isTypeErr(child, {'nil', InterfaceSkillCharges}, 'child')
 
     local instance = child or Class.allocate(InterfaceSkillCharges)
-    instance = NormalImage.new(private.fdf, instance)
+    instance = Backdrop.new(private.fdf, instance)
 
     private.newData(instance)
 
@@ -53,15 +53,21 @@ end
 ---@param width number
 ---@param height number
 function public:setSize(width, height)
-    NormalImagePublic.setSize(self, width, height)
+    isTypeErr(self, InterfaceSkillCharges, 'self')
+    isTypeErr(width, 'number', 'width')
+    isTypeErr(height, 'number', 'height')
     local priv = private.data[self]
+
+    BackdropPublic.setSize(self, width, height)
 
     priv.text:setSize(width, height)
     priv.text:setFont('fonts\\nim_____.ttf', 0.8 * height)
 end
 
----@param charges AbilityExtCharges
+---@param charges AbilityExtCharges | nil
 function public:setCharges(charges)
+    isTypeErr(self, InterfaceSkillCharges, 'self')
+    isTypeErr(charges, {'nil', AbilityExtCharges}, 'charges')
     local priv = private.data[self]
 
     local prev = priv.charges
@@ -87,7 +93,7 @@ end
 private.data = setmetatable({}, {__mode = 'k'})
 private.charges2frame = setmetatable({}, {__mode = 'kv'})
 
----@param self FrameNormalButton
+---@param self InterfaceSkillCharges
 function private.newData(self)
     local priv = {
         charges = nil,
@@ -102,8 +108,8 @@ function private.newData(self)
     self:setSize(self:getWidth(), self:getHeight())
 end
 
----@type AbilityExtChargesCallback
-private.changedCallback = function(charges)
+---@param charges AbilityExtCharges
+function private.changedCallback(charges)
     local self = private.charges2frame[charges]
     local max = charges:getMax()
 
@@ -118,7 +124,7 @@ private.changedCallback = function(charges)
     end
 end
 
-private.fdf = FdfNormalImage.new('InterfaceSkillCharges')
+private.fdf = FdfBackdrop.new('InterfaceSkillCharges')
 private.fdf:setWidth(0.01)
 private.fdf:setHeight(0.01)
 --private.fdf:setBackgroundTileMode(true)

@@ -2,22 +2,19 @@
 -- Include
 --=========
 
-local Class = require(LibList.ClassLib) or error('')
----@type AbilityLib
-local AbilLib = require(LibList.AbilityExtLib) or error('')
-local AbilContainer = AbilLib.Container or error('')
---local AbilEvent = AbilLib.Event or error('')
----@type FrameLib
-local FrameLib = require(LibList.FrameLib) or error('')
-local FdfNormalImage = FrameLib.Fdf.Normal.Backdrop or error('')
-local NormalImage = FrameLib.Normal.Image or error('')
-local NormalImagePublic = Class.getPublic(NormalImage) or error('')
----@type InputLib
-local InputLib = require(LibList.InputLib) or error('')
----@type UtilsLib
-local UtilsLib = require(LibList.UtilsLib) or error('')
-local isTypeErr = UtilsLib.isTypeErr or error('')
-local Log = UtilsLib.Log or error('')
+local Class = LibManager.getDepency('LuaClass')
+---@type Wc3AbilityExt
+local Wc3AbilityExt = LibManager.getDepency('Wc3AbilityExt')
+local AbilityExtContainer = Wc3AbilityExt.Container or error('')
+---@type Wc3FrameExt
+local Wc3FrameExt = LibManager.getDepency('Wc3FrameExt')
+local FdfBackdrop = Wc3FrameExt.FdfBackdrop or error('')
+local Backdrop = Wc3FrameExt.Backdrop or error('')
+local BackdropPublic = Class.getPublic(Backdrop) or error('')
+---@type Wc3Utils
+local Wc3Utils = LibManager.getDepency('Wc3Utils')
+local isTypeErr = Wc3Utils.isTypeErr or error('')
+local Log = Wc3Utils.Log or error('')
 
 ---@type InterfaceSkillButtonClass
 local SkillButton = require('Interface.Skill.Button') or error('')
